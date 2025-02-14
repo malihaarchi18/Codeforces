@@ -53,6 +53,8 @@ code_block = soup.find('pre', id='program-source-text')
 if not code_block:
     # Try the class if the id isn't found (in case it's not always present)
     code_block = soup.find('pre', class_='program-source-text')
+    print(soup.prettify())  # To debug the structure of the HTML
+
 
 if code_block:
     # Extract each <li> element within the <ol> tag
