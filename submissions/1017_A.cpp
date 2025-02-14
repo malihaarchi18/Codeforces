@@ -1,2 +1,1 @@
-// Accepted solution for 1017_A.cpp
-int main() { return 0; }
+// No code found for 1017_A.cpp

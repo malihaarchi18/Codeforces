@@ -1,2 +1,1 @@
-// Accepted solution for 460_A.cpp
-int main() { return 0; }
+// No code found for 460_A.cpp

@@ -1,2 +1,1 @@
-// Accepted solution for 1106_C.cpp
-int main() { return 0; }
+// No code found for 1106_C.cpp

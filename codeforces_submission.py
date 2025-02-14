@@ -1,11 +1,11 @@
 import requests
-import json
+from bs4 import BeautifulSoup
 import os
 import git
 
 # Your Codeforces handle
-CODEFORCES_HANDLE = "your_handle"  # Change to your Codeforces username
-GITHUB_REPO_PATH = r"C:\Users\Lychee\Codeforces"  # Change this to your local GitHub repo path
+CODEFORCES_HANDLE = "your_handle"
+GITHUB_REPO_PATH = r"C:\Users\Lychee\Codeforces"  # Update this to your local GitHub repo path
 
 # Fetch submissions
 url = f"https://codeforces.com/api/user.status?handle=archi_998&from=1&count=1000"
@@ -13,7 +13,7 @@ response = requests.get(url)
 data = response.json()
 
 # Ensure successful API response
-if data.get("status") != "OK":
+if data["status"] != "OK":
     print("Error fetching Codeforces data")
     exit()
 
@@ -25,36 +25,50 @@ os.makedirs(save_dir, exist_ok=True)
 
 # Process and save only accepted solutions
 for submission in submissions:
-    if submission.get("verdict") == "OK":
-        problem = submission.get("problem", {})
-        
+    if submission["verdict"] == "OK":
         # Handle missing contestId
-        contest_id = problem.get("contestId", "GYM")  # Default "GYM" for non-contest problems
-        index = problem.get("index", "UNKNOWN")
+        contest_id = submission['problem'].get('contestId', None)
+        problem_index = submission['problem']['index']
         
-        problem_name = f"{contest_id}_{index}.cpp"
+        if contest_id is None:
+            print(f"Skipping submission with problem {problem_index}: Missing contestId")
+            continue
+        
+        problem_name = f"{contest_id}_{problem_index}.cpp"
         file_path = os.path.join(save_dir, problem_name)
 
-        # Fetch real solution code (requires authentication & web scraping)
-        # Here, we assume a placeholder function `fetch_solution_code(submission_id)`
-        submission_id = submission.get("id")
-        code = f"// Accepted solution for {problem_name}\nint main() {{ return 0; }}"  # Dummy content
-        
+        # Get the URL for the submission's code
+        submission_url = f"https://codeforces.com/contest/{contest_id}/submission/{submission['id']}"
+
+        # Fetch the submission page
+        submission_response = requests.get(submission_url)
+        soup = BeautifulSoup(submission_response.text, 'html.parser')
+
+        # Find the code in the submission page (adjust based on the HTML structure)
+        code_block = soup.find('div', class_='program-source')
+
+        if code_block:
+            code = code_block.get_text(strip=True)
+        else:
+            code = f"// No code found for {problem_name}\n"
+
+        # Write the real code to the file
         with open(file_path, "w") as file:
             file.write(code)
 
 print("Saved accepted submissions successfully!")
 
-# Push changes to GitHub
 def push_to_github():
     try:
         repo = git.Repo(GITHUB_REPO_PATH)
-        repo.git.add(all=True)
+        repo.git.add(A=True)
         repo.index.commit("Updated accepted Codeforces solutions")
         origin = repo.remote(name="origin")
         origin.push()
-        print("Pushed to GitHub successfully!")
+        print("✅ Pushed to GitHub successfully!")
+    except git.exc.GitCommandError as e:
+        print(f"❌ Git Error: {e}")
     except Exception as e:
-        print(f"Error pushing to GitHub: {e}")
+        print(f"❌ Unexpected Error: {e}")
 
 push_to_github()

@@ -1,2 +1,1 @@
-// Accepted solution for 136_A.cpp
-int main() { return 0; }
+// No code found for 136_A.cpp
