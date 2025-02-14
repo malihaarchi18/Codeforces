@@ -4,7 +4,7 @@ import os
 import git
 
 # Your Codeforces handle
-CODEFORCES_HANDLE = "your_handle"
+CODEFORCES_HANDLE = "archi_998"
 GITHUB_REPO_PATH = r"C:\Users\Lychee\Codeforces"  # Update this to your local GitHub repo path
 
 # Fetch submissions
@@ -43,20 +43,34 @@ for submission in submissions:
         # Fetch the submission page
         submission_response = requests.get(submission_url)
         soup = BeautifulSoup(submission_response.text, 'html.parser')
+         
+        # Initialize code as an empty string in case the code block isn't found
+code = ""
 
-        # Find the code in the submission page (adjust based on the HTML structure)
-        code_block = soup.find('div', class_='program-source')
+# Try to find the <pre> tag with the specific id or class
+code_block = soup.find('pre', id='program-source-text')
 
-        if code_block:
-            code = code_block.get_text(strip=True)
-        else:
-            code = f"// No code found for {problem_name}\n"
+if not code_block:
+    # Try the class if the id isn't found (in case it's not always present)
+    code_block = soup.find('pre', class_='program-source')
 
-        # Write the real code to the file
-        with open(file_path, "w") as file:
-            file.write(code)
+if code_block:
+    # Extract each <li> element within the <ol> tag
+    code_lines = [line.get_text() for line in code_block.find_all('li')]
+    code = "\n".join(code_lines)
+    print("Code found:")
+    print(code)
+else:
+    print("Code not found")
 
-print("Saved accepted submissions successfully!")
+# Now that code is guaranteed to exist, write it to the file
+if code:
+    with open(file_path, "w") as file:
+        file.write(code)
+else:
+    print(f"Skipping {file_path} because no code was found.")
+
+
 
 def push_to_github():
     try:
